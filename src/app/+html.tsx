@@ -16,6 +16,8 @@ export default function Root({ children }: PropsWithChildren) {
 
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-512.png" />
+        {/* Standard name for Chrome/Edge/etc; the apple-prefixed one is still needed for Safari. */}
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Gravador IA" />

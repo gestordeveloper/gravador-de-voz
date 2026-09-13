@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Alert, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { RecordingListItem } from '@/components/recording-list-item';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -14,21 +16,15 @@ export default function RecordingsScreen() {
   const insets = useSafeAreaInsets();
   const recordings = useRecordingsStore((s) => s.recordings);
   const deleteRecording = useRecordingsStore((s) => s.deleteRecording);
+  const [pendingDelete, setPendingDelete] = useState<Recording | null>(null);
 
   const handleMore = (recording: Recording) => {
-    Alert.alert(recording.title, undefined, [
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: () => {
-          Alert.alert('Excluir gravação?', 'Essa ação não pode ser desfeita.', [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Excluir', style: 'destructive', onPress: () => deleteRecording(recording.id) },
-          ]);
-        },
-      },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+    setPendingDelete(recording);
+  };
+
+  const confirmDelete = () => {
+    if (pendingDelete) deleteRecording(pendingDelete.id);
+    setPendingDelete(null);
   };
 
   return (
@@ -70,7 +66,7 @@ export default function RecordingsScreen() {
               <RecordingListItem
                 recording={item}
                 onPress={() => router.push(`/recording/${item.id}`)}
-                onMore={() => handleMore(item)}
+                onDelete={() => handleMore(item)}
               />
             )}
           />
@@ -88,6 +84,15 @@ export default function RecordingsScreen() {
           </Pressable>
         </>
       )}
+
+      <ConfirmDialog
+        visible={pendingDelete !== null}
+        title="Excluir gravação?"
+        message="Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </ThemedView>
   );
 }

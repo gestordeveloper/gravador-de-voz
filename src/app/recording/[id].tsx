@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -30,6 +31,7 @@ export default function RecordingDetailScreen() {
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState(recording?.title ?? '');
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
 
   const playback = usePlayback(recording?.segments ?? []);
 
@@ -44,17 +46,13 @@ export default function RecordingDetailScreen() {
   }
 
   const handleDelete = () => {
-    Alert.alert('Excluir gravação?', 'Essa ação não pode ser desfeita.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: () => {
-          deleteRecording(recording.id);
-          router.back();
-        },
-      },
-    ]);
+    setDeleteConfirmVisible(true);
+  };
+
+  const confirmDelete = () => {
+    setDeleteConfirmVisible(false);
+    deleteRecording(recording.id);
+    router.back();
   };
 
   const commitTitle = () => {
@@ -167,6 +165,15 @@ export default function RecordingDetailScreen() {
           onShare={() => recording.summary && void Share.share({ message: recording.summary })}
         />
       </ScrollView>
+
+      <ConfirmDialog
+        visible={deleteConfirmVisible}
+        title="Excluir gravação?"
+        message="Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirmVisible(false)}
+      />
     </ThemedView>
   );
 }

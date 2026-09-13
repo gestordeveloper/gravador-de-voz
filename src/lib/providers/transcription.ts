@@ -8,6 +8,7 @@ const ENDPOINTS: Record<TranscriptionProviderId, string> = {
 
 interface TranscribeParams {
   fileUrl: string;
+  jwt: string;
   provider: TranscriptionProviderId;
   apiKey: string;
   model?: string;
@@ -31,13 +32,20 @@ function extractErrorMessage(body: string, status: number): string {
 // there (rather than a local file) works the same way on native and web, and means transcription
 // still works even if the user taps "Transcrever" long after the recording session ended, once
 // any local temp copy is already gone.
-export async function transcribeAudio({ fileUrl, provider, apiKey, model, language }: TranscribeParams): Promise<string> {
+//
+// The segment file's permissions are locked to its owner (Role.user(userId), see
+// recordingFiles.ts), so a plain unauthenticated fetch() of its URL 404s — Appwrite doesn't
+// forward the app's session automatically here (it's a cross-domain session persisted via
+// localStorage, not a cookie the browser would attach on its own). A short-lived JWT minted from
+// the current session (see useRecordingsStore.transcribeRecording) and sent as X-Appwrite-JWT is
+// what actually authenticates this request; confirmed against the real instance.
+export async function transcribeAudio({ fileUrl, jwt, provider, apiKey, model, language }: TranscribeParams): Promise<string> {
   const trimmedKey = apiKey.trim();
   if (!trimmedKey) {
     throw new Error(`Configure a chave de API da ${provider} nas Configurações.`);
   }
 
-  const audioResponse = await fetch(fileUrl);
+  const audioResponse = await fetch(fileUrl, { headers: { 'X-Appwrite-JWT': jwt } });
   if (!audioResponse.ok) {
     throw new Error('Não foi possível baixar o áudio para transcrever.');
   }

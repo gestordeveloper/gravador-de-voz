@@ -11,10 +11,10 @@ import type { Recording } from '@/lib/types';
 interface RecordingListItemProps {
   recording: Recording;
   onPress: () => void;
-  onMore: () => void;
+  onDelete: () => void;
 }
 
-export function RecordingListItem({ recording, onPress, onMore }: RecordingListItemProps) {
+export function RecordingListItem({ recording, onPress, onDelete }: RecordingListItemProps) {
   const theme = useTheme();
 
   return (
@@ -56,8 +56,8 @@ export function RecordingListItem({ recording, onPress, onMore }: RecordingListI
           )}
         </View>
       </View>
-      <Pressable onPress={onMore} hitSlop={12} style={styles.moreButton}>
-        <Ionicons name="ellipsis-vertical" size={20} color={theme.textSecondary} />
+      <Pressable onPress={onDelete} hitSlop={12} style={styles.moreButton}>
+        <Ionicons name="trash-outline" size={20} color={theme.textSecondary} />
       </Pressable>
     </Pressable>
   );

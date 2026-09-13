@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PrimaryButton } from '@/components/primary-button';
 import { ProviderSelector } from '@/components/provider-selector';
 import { ProviderSettingsCard } from '@/components/provider-settings-card';
@@ -63,12 +65,15 @@ export default function SettingsScreen() {
     setTranscriptionModelRaw(userId, provider, model);
   const setSummaryModel = (provider: SummaryProviderId, model: string) => setSummaryModelRaw(userId, provider, model);
   const setApiKey = (provider: ProviderId, value: string) => setApiKeyRaw(userId, provider, value);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert('Sair da conta?', undefined, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => void logout() },
-    ]);
+    setLogoutConfirmVisible(true);
+  };
+
+  const confirmLogout = () => {
+    setLogoutConfirmVisible(false);
+    void logout();
   };
 
   return (
@@ -180,6 +185,14 @@ export default function SettingsScreen() {
           <PrimaryButton label="Sair da conta" variant="danger" onPress={handleLogout} />
         </Section>
       </ScrollView>
+
+      <ConfirmDialog
+        visible={logoutConfirmVisible}
+        title="Sair da conta?"
+        confirmLabel="Sair"
+        onConfirm={confirmLogout}
+        onCancel={() => setLogoutConfirmVisible(false)}
+      />
     </ThemedView>
   );
 }

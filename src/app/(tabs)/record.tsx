@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Animated, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { LiveWaveform } from '@/components/live-waveform';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,6 +25,8 @@ export default function RecordScreen() {
   const createRecording = useRecordingsStore((s) => s.createRecording);
   const [pulse] = useState(() => new Animated.Value(1));
   const [saving, setSaving] = useState(false);
+  const [discardConfirmVisible, setDiscardConfirmVisible] = useState(false);
+  const [infoDialog, setInfoDialog] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
     if (phase === 'recording') {
@@ -56,23 +59,19 @@ export default function RecordScreen() {
   };
 
   const handleDiscard = () => {
-    Alert.alert('Descartar gravação?', 'O áudio gravado será apagado e não poderá ser recuperado.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Descartar',
-        style: 'destructive',
-        onPress: async () => {
-          const result = await stop();
-          result?.segments.forEach((segment) => deleteLocalSegmentFile(segment.uri));
-        },
-      },
-    ]);
+    setDiscardConfirmVisible(true);
+  };
+
+  const confirmDiscard = async () => {
+    setDiscardConfirmVisible(false);
+    const result = await stop();
+    result?.segments.forEach((segment) => deleteLocalSegmentFile(segment.uri));
   };
 
   const handleSave = async () => {
     const result = await stop();
     if (!result || result.durationMillis < 500) {
-      Alert.alert('Gravação muito curta', 'Tente gravar por mais tempo antes de salvar.');
+      setInfoDialog({ title: 'Gravação muito curta', message: 'Tente gravar por mais tempo antes de salvar.' });
       return;
     }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -81,7 +80,10 @@ export default function RecordScreen() {
       const recording = await createRecording(userId, result.segments);
       router.push(`/recording/${recording.id}`);
     } catch (error) {
-      Alert.alert('Erro ao salvar', error instanceof Error ? error.message : 'Tente novamente.');
+      setInfoDialog({
+        title: 'Erro ao salvar',
+        message: error instanceof Error ? error.message : 'Tente novamente.',
+      });
     } finally {
       setSaving(false);
     }
@@ -211,6 +213,32 @@ export default function RecordScreen() {
           )}
         </View>
       </View>
+
+      {saving && (
+        <View style={[StyleSheet.absoluteFill, styles.savingOverlay]}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <ThemedText type="smallBold" style={styles.savingText}>
+            Salvando gravação…
+          </ThemedText>
+        </View>
+      )}
+
+      <ConfirmDialog
+        visible={discardConfirmVisible}
+        title="Descartar gravação?"
+        message="O áudio gravado será apagado e não poderá ser recuperado."
+        confirmLabel="Descartar"
+        onConfirm={() => void confirmDiscard()}
+        onCancel={() => setDiscardConfirmVisible(false)}
+      />
+
+      <ConfirmDialog
+        visible={infoDialog !== null}
+        title={infoDialog?.title ?? ''}
+        message={infoDialog?.message}
+        destructive={false}
+        onConfirm={() => setInfoDialog(null)}
+      />
     </ThemedView>
   );
 }
@@ -354,5 +382,14 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  savingOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  savingText: {
+    color: '#ffffff',
   },
 });

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { RecordedSegment as CapturedSegment } from '@/hooks/use-recorder';
+import { account } from '@/lib/appwrite/client';
 import { deleteLocalSegmentFile, deleteSegmentFile, uploadSegmentFile } from '@/lib/appwrite/recordingFiles';
 import {
   createRecordingRow,
@@ -108,6 +109,18 @@ export const useRecordingsStore = create<RecordingsState>((set, get) => ({
     patch({ transcriptStatus: 'loading', transcriptError: undefined });
     void updateRecordingRow(id, { transcriptStatus: 'loading', transcriptError: undefined });
 
+    // Segment files are owned by this user (Role.user(userId) only) — a plain fetch of their
+    // Appwrite URL 404s without this. One JWT (valid up to 1h) covers the whole loop below.
+    let jwt: string;
+    try {
+      jwt = (await account.createJWT({ duration: 3600 })).jwt;
+    } catch (jwtError) {
+      const message = jwtError instanceof Error ? jwtError.message : 'Sessão expirada. Entre novamente.';
+      patch({ transcriptStatus: 'error', transcriptError: message });
+      void updateRecordingRow(id, { transcriptStatus: 'error', transcriptError: message });
+      return;
+    }
+
     const segments = [...recording.segments];
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
@@ -116,6 +129,7 @@ export const useRecordingsStore = create<RecordingsState>((set, get) => ({
       try {
         const text = await transcribeAudio({
           fileUrl: segment.fileUrl,
+          jwt,
           provider,
           apiKey: apiKeys[provider] ?? '',
           model: settings.transcriptionModels[provider],
