@@ -1,0 +1,10 @@
+node_modules
+dist
+.expo
+.git
+android
+ios
+*.log
+.env
+.env.*.local
+scripts
