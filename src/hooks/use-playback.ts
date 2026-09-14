@@ -44,7 +44,14 @@ export function usePlayback(segments: RecordingSegment[]) {
       setIsLoadingSegment(true);
       try {
         const source = await buildAuthedSource(segment);
-        await preload(source).catch(() => {});
+        // preload()'s return type differs by platform — a real Promise<void> on native, but a
+        // fire-and-forget void on web (see expo-audio's ExpoAudio.web.ts) — so `.catch()` on the
+        // return value throws on web. try/catch works for both.
+        try {
+          await preload(source);
+        } catch {
+          // best-effort warm-up; player.replace below still loads the source directly
+        }
         if (loadTokenRef.current !== myToken) return; // superseded by a newer load
         player.replace(source);
         if (autoplay) player.play();
