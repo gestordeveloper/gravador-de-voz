@@ -15,7 +15,8 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="description" content="Grave, transcreva e resuma notas de voz com IA." />
 
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-512.png" />
+        <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         {/* Standard name for Chrome/Edge/etc; the apple-prefixed one is still needed for Safari. */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

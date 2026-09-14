@@ -44,7 +44,13 @@ export default function SignupScreen() {
 
           <LabeledTextInput label="Nome" value={name} onChangeText={setName} placeholder="Seu nome" />
           <LabeledTextInput label="E-mail" value={email} onChangeText={setEmail} placeholder="voce@exemplo.com" />
-          <LabeledTextInput label="Senha (mínimo 8 caracteres)" value={password} onChangeText={setPassword} placeholder="••••••••" />
+          <LabeledTextInput
+            label="Senha (mínimo 8 caracteres)"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry
+          />
 
           {storeError && (
             <ThemedText type="small" style={styles.error}>

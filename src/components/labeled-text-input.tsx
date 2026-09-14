@@ -8,9 +8,10 @@ interface LabeledTextInputProps {
   value: string;
   placeholder?: string;
   onChangeText: (text: string) => void;
+  secureTextEntry?: boolean;
 }
 
-export function LabeledTextInput({ label, value, placeholder, onChangeText }: LabeledTextInputProps) {
+export function LabeledTextInput({ label, value, placeholder, onChangeText, secureTextEntry }: LabeledTextInputProps) {
   const theme = useTheme();
 
   return (
@@ -25,6 +26,7 @@ export function LabeledTextInput({ label, value, placeholder, onChangeText }: La
         placeholderTextColor={theme.textSecondary}
         autoCapitalize="none"
         autoCorrect={false}
+        secureTextEntry={secureTextEntry}
         style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
       />
     </View>
